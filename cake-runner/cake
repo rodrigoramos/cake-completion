@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo Cake Runner
+
 bootstrapFileName="build.sh"
 cakeFileName="build.cake"
 
@@ -9,25 +11,37 @@ if [ -z "$1" ]; then
 fi
 
 # Find build.cake paths
-path=(`find . -name "$cakeFileName"`)
+declare cakeBasePath
 
-if [ "${#path[@]}" -gt "1" ]; then
-  echo "It was found multiple $cakeFileName files"
+while [ ! "$PWD" == "/" ] ; do
+  # echo Looking in folder $PWD
+  path=(`find . -maxdepth 1 -name "$cakeFileName"`)
 
-  for i in "${path[@]}"; do
-    echo "$i"
-  done
+  if [ "${#path[@]}" -eq "1" ]; then
+    break
+  fi
+  
+  if [ "${#path[@]}" -gt "1" ]; then
+    echo "It was found multiple $cakeFileName files"
+
+    for i in "${path[@]}"; do
+      echo "$i"
+    done
+    exit 1
+  fi
+
+  cd ..
+done
+
+if [ "$PWD" == "/" ]; then
+  echo "It was not possible to find the $cakeFileName file."
   exit 1
 fi
 
-cakeBasePath=$(dirname $path)
-
 # Check for the bootstrap script file
-bootstrapScript="$cakeBasePath/$bootstrapFileName"
-
-if [ ! -x $bootstrapScript ]; then
-  echo "The file $bootstrapScript does not exist nor is executable"
+if [ ! -e "./$bootstrapFileName" ]; then
+  echo "The file $PWD/$bootstrapFileName does not exist or is executable"
+  exit 1;
 fi
 
-cd $cakeBasePath
 ./$bootstrapFileName --target=$1
