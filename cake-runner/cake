@@ -1,0 +1,33 @@
+#!/bin/bash
+
+bootstrapFileName="build.sh"
+cakeFileName="build.cake"
+
+if [ -z "$1" ]; then
+  echo "No command passed"
+  exit 1
+fi
+
+# Find build.cake paths
+path=(`find . -name "$cakeFileName"`)
+
+if [ "${#path[@]}" -gt "1" ]; then
+  echo "It was found multiple $cakeFileName files"
+
+  for i in "${path[@]}"; do
+    echo "$i"
+  done
+  exit 1
+fi
+
+cakeBasePath=$(dirname $path)
+
+# Check for the bootstrap script file
+bootstrapScript="$cakeBasePath/$bootstrapFileName"
+
+if [ ! -x $bootstrapScript ]; then
+  echo "The file $bootstrapScript does not exist nor is executable"
+fi
+
+cd $cakeBasePath
+./$bootstrapFileName --target=$1
